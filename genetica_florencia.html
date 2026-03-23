@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Genética para Florencia</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #161a23;
+    --surface2: #1e2330;
+    --border: #2a3040;
+    --accent: #c8a96e;
+    --accent2: #6eb5c8;
+    --accent3: #c86e9a;
+    --text: #e8e4dc;
+    --text-muted: #7a8094;
+    --green: #6ec896;
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.65;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── SPLASH / COVER ── */
+  #splash {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  #splash::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 30% 20%, #c8a96e18 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 80%, #6eb5c818 0%, transparent 55%);
+    pointer-events: none;
+  }
+  .dna-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .dna-strand {
+    position: absolute;
+    width: 2px;
+    height: 100%;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 18px,
+      #c8a96e22 18px,
+      #c8a96e22 20px
+    );
+    animation: drift 6s ease-in-out infinite;
+  }
+  .dna-strand:nth-child(1) { left: 15%; animation-delay: 0s; }
+  .dna-strand:nth-child(2) { left: 85%; animation-delay: -3s; }
+  @keyframes drift {
+    0%,100% { transform: translateY(0); opacity: .4; }
+    50% { transform: translateY(-12px); opacity: .8; }
+  }
+
+  .splash-label {
+    font-size: .7rem;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1.2rem;
+    font-weight: 500;
+  }
+  .splash-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.6rem;
+    line-height: 1.15;
+    margin-bottom: .6rem;
+    background: linear-gradient(135deg, var(--accent), var(--text) 60%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .splash-title em {
+    display: block;
+    font-style: italic;
+    font-size: 1.9rem;
+    color: var(--accent2);
+    -webkit-text-fill-color: var(--accent2);
+  }
+  .splash-sub {
+    font-size: .95rem;
+    color: var(--text-muted);
+    max-width: 300px;
+    margin: 0 auto 2.5rem;
+  }
+  .start-btn {
+    background: var(--accent);
+    color: #0d0f14;
+    border: none;
+    border-radius: 50px;
+    padding: .85rem 2.2rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: .04em;
+    box-shadow: 0 0 30px #c8a96e40;
+    transition: transform .15s, box-shadow .15s;
+  }
+  .start-btn:active { transform: scale(.96); }
+
+  /* ── NAVIGATION ── */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #0d0f14ee;
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: .7rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  nav::-webkit-scrollbar { display: none; }
+  .nav-chip {
+    flex-shrink: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 50px;
+    padding: .35rem .9rem;
+    font-size: .78rem;
+    cursor: pointer;
+    transition: all .2s;
+    white-space: nowrap;
+  }
+  .nav-chip.active, .nav-chip:active {
+    background: var(--accent);
+    color: #0d0f14;
+    border-color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* ── MAIN CONTENT ── */
+  main {
+    padding: 0 0 5rem;
+  }
+
+  /* ── SECTION ── */
+  .section {
+    display: none;
+    padding: 1.8rem 1.2rem 1rem;
+    animation: fadeUp .4s ease both;
+  }
+  .section.visible { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-header {
+    margin-bottom: 1.5rem;
+  }
+  .section-tag {
+    font-size: .65rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 500;
+    margin-bottom: .5rem;
+  }
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    line-height: 1.2;
+  }
+  .section-title span { color: var(--accent2); }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.2rem;
+    margin-bottom: 1rem;
+  }
+  .card-title {
+    font-size: .8rem;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: var(--accent);
+    font-weight: 500;
+    margin-bottom: .6rem;
+  }
+  .card p { font-size: .92rem; color: var(--text-muted); }
+  .card p + p { margin-top: .6rem; }
+  strong { color: var(--text); font-weight: 500; }
+
+  /* ── HIGHLIGHT BOX ── */
+  .highlight {
+    background: linear-gradient(135deg, #c8a96e14, #6eb5c810);
+    border: 1px solid #c8a96e30;
+    border-left: 3px solid var(--accent);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    margin: 1rem 0;
+    font-size: .88rem;
+    color: var(--text);
+  }
+
+  /* ── QUIZ ── */
+  .quiz-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.3rem;
+    margin-bottom: 1rem;
+  }
+  .quiz-q {
+    font-size: .95rem;
+    font-weight: 400;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+  }
+  .quiz-options { display: flex; flex-direction: column; gap: .5rem; }
+  .quiz-opt {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: .75rem 1rem;
+    font-size: .88rem;
+    color: var(--text);
+    cursor: pointer;
+    text-align: left;
+    transition: all .2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .quiz-opt:active { transform: scale(.98); }
+  .quiz-opt.correct {
+    background: #6ec89620;
+    border-color: var(--green);
+    color: var(--green);
+  }
+  .quiz-opt.wrong {
+    background: #c86e6e20;
+    border-color: #c86e6e;
+    color: #c86e6e;
+  }
+  .quiz-opt.disabled { pointer-events: none; }
+  .quiz-feedback {
+    margin-top: .8rem;
+    font-size: .82rem;
+    color: var(--text-muted);
+    display: none;
+    line-height: 1.5;
+  }
+  .quiz-feedback.show { display: block; }
+
+  /* ── VISUAL DIAGRAMS ── */
+  .dna-visual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 1.5rem 0;
+    flex-wrap: wrap;
+  }
+  .allele-pair {
+    text-align: center;
+  }
+  .allele-circles {
+    display: flex;
+    gap: .4rem;
+    margin-bottom: .4rem;
+  }
+  .allele-circle {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    font-weight: 700;
+    font-family: 'Playfair Display', serif;
+  }
+  .dom { background: var(--accent); color: #0d0f14; }
+  .rec { background: var(--surface2); border: 2px solid var(--accent); color: var(--accent); }
+  .allele-label { font-size: .72rem; color: var(--text-muted); }
+  .arrow-right { color: var(--text-muted); font-size: 1.4rem; align-self: center; }
+
+  /* ── TIMELINE ── */
+  .timeline { padding: .5rem 0; }
+  .tl-item {
+    display: flex;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+    position: relative;
+  }
+  .tl-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 18px; top: 38px; bottom: 0;
+    width: 1px;
+    background: var(--border);
+  }
+  .tl-dot {
+    flex-shrink: 0;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 2px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+  }
+  .tl-content { flex: 1; }
+  .tl-time {
+    font-size: .7rem;
+    color: var(--accent);
+    letter-spacing: .1em;
+    font-weight: 500;
+    text-transform: uppercase;
+    margin-bottom: .2rem;
+  }
+  .tl-text { font-size: .88rem; color: var(--text-muted); line-height: 1.55; }
+  .tl-text strong { color: var(--text); }
+
+  /* ── SPECIES BARS ── */
+  .species-bar {
+    margin: .6rem 0;
+  }
+  .species-bar-label {
+    display: flex; justify-content: space-between;
+    font-size: .8rem; margin-bottom: .3rem;
+  }
+  .species-bar-label .name { color: var(--text); font-weight: 500; }
+  .species-bar-label .pct { color: var(--accent); }
+  .bar-track {
+    background: var(--surface2);
+    border-radius: 50px;
+    height: 8px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 50px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width 1s ease;
+  }
+
+  /* ── INTERACTIVE DNA BUILDER ── */
+  .dna-builder {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.2rem;
+    margin: 1rem 0;
+  }
+  .dna-builder-title {
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: var(--accent2);
+    font-weight: 500;
+    margin-bottom: 1rem;
+  }
+  .nucleotides {
+    display: flex; gap: .5rem; margin-bottom: 1rem; flex-wrap: wrap;
+  }
+  .nuc-btn {
+    padding: .5rem .9rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .nuc-A { background: #6ec89620; border-color: var(--green); color: var(--green); }
+  .nuc-T { background: #c8a96e20; border-color: var(--accent); color: var(--accent); }
+  .nuc-G { background: #6eb5c820; border-color: var(--accent2); color: var(--accent2); }
+  .nuc-C { background: #c86e9a20; border-color: var(--accent3); color: var(--accent3); }
+  .nuc-btn:active { transform: scale(.93); }
+  .dna-display {
+    background: var(--bg);
+    border-radius: 10px;
+    padding: .8rem 1rem;
+    min-height: 60px;
+    font-size: .9rem;
+    letter-spacing: .1em;
+    font-weight: 500;
+    word-break: break-all;
+    margin-bottom: .8rem;
+  }
+  .complement-row {
+    font-size: .72rem;
+    color: var(--text-muted);
+    margin-top: .3rem;
+  }
+  .build-actions {
+    display: flex; gap: .5rem;
+  }
+  .build-btn {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .8rem;
+    padding: .5rem;
+    cursor: pointer;
+  }
+  .build-btn:active { background: var(--border); }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 3px; background: var(--surface2); z-index: 200;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width .4s ease;
+  }
+
+  /* ── CONGRATS ── */
+  .congrats-card {
+    background: linear-gradient(135deg, #c8a96e18, #6eb5c818);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 2rem 1.2rem;
+    text-align: center;
+    margin-top: 1rem;
+  }
+  .congrats-emoji { font-size: 2.5rem; margin-bottom: .5rem; }
+  .congrats-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    color: var(--accent);
+    margin-bottom: .5rem;
+  }
+  .congrats-card p { font-size: .88rem; color: var(--text-muted); }
+
+  .separator {
+    height: 1px;
+    background: var(--border);
+    margin: 1.2rem 0;
+  }
+
+  .pill {
+    display: inline-block;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    padding: .2rem .7rem;
+    font-size: .72rem;
+    color: var(--accent);
+    font-weight: 500;
+    margin-right: .3rem;
+    margin-bottom: .3rem;
+  }
+
+  .big-emoji { font-size: 2rem; margin-bottom: .5rem; display: block; }
+
+  /* ── HIDDEN ── */
+  .app { display: none; }
+  .app.visible { display: block; }
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="dna-bg">
+    <div class="dna-strand"></div>
+    <div class="dna-strand"></div>
+  </div>
+  <p class="splash-label">Mini curso · Florencia</p>
+  <h1 class="splash-title">Genética<em>& Evolución</em></h1>
+  <p class="splash-sub">De los genes a los neandertales. Un recorrido visual, interactivo y sin complicaciones.</p>
+  <button class="start-btn" onclick="startApp()">Empezar →</button>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+  <nav id="nav">
+    <div class="nav-chip active" onclick="goSection(0,this)">🧬 Genes</div>
+    <div class="nav-chip" onclick="goSection(1,this)">🔤 Alelos</div>
+    <div class="nav-chip" onclick="goSection(2,this)">⚡ Mutaciones</div>
+    <div class="nav-chip" onclick="goSection(3,this)">🌿 Evolución</div>
+    <div class="nav-chip" onclick="goSection(4,this)">🦴 Neandertales</div>
+    <div class="nav-chip" onclick="goSection(5,this)">❓ Quiz</div>
+  </nav>
+
+  <main>
+
+    <!-- SECTION 0: GENES -->
+    <div class="section visible" id="sec0">
+      <div class="section-header">
+        <p class="section-tag">Capítulo 1</p>
+        <h2 class="section-title">El lenguaje<br><span>de la vida</span></h2>
+      </div>
+
+      <div class="card">
+        <p class="card-title">¿Qué es un gen?</p>
+        <p>Un gen es una <strong>secuencia de ADN</strong> que contiene instrucciones para fabricar una proteína. Las proteínas son las que hacen casi todo en el cuerpo: forman tejidos, catalizan reacciones, transmiten señales.</p>
+        <p>Tenemos aproximadamente <strong>20.000 genes</strong> en nuestro genoma. Están distribuidos en 23 pares de cromosomas.</p>
+      </div>
+
+      <div class="highlight">
+        🧬 El ADN es como un libro de recetas. Los genes son las recetas individuales. Las proteínas son los platos cocinados.
+      </div>
+
+      <div class="card">
+        <p class="card-title">Los cuatro "ladrillos" del ADN</p>
+        <p>El ADN se escribe con solo 4 letras: <strong>A, T, G, C</strong> (las bases nitrogenadas). La combinación de millones de estas letras forma todas las instrucciones de un organismo.</p>
+        <p>Las bases se emparejan siempre igual: <strong>A con T</strong>, y <strong>G con C</strong>. Esto permite copiar el ADN fielmente.</p>
+      </div>
+
+      <!-- DNA Builder interactivo -->
+      <div class="dna-builder">
+        <p class="dna-builder-title">🔬 Construí tu propia cadena de ADN</p>
+        <div class="nucleotides">
+          <button class="nuc-btn nuc-A" onclick="addNuc('A')">A</button>
+          <button class="nuc-btn nuc-T" onclick="addNuc('T')">T</button>
+          <button class="nuc-btn nuc-G" onclick="addNuc('G')">G</button>
+          <button class="nuc-btn nuc-C" onclick="addNuc('C')">C</button>
+        </div>
+        <div class="dna-display" id="dnaDisplay">
+          <span style="color:var(--text-muted); font-size:.8rem;">Tocá las bases para construir tu cadena...</span>
+        </div>
+        <div class="complement-row" id="complementRow"></div>
+        <div class="build-actions">
+          <button class="build-btn" onclick="clearDNA()">Borrar</button>
+          <button class="build-btn" onclick="showComplement()">Ver complementaria</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="card-title">Cromosomas</p>
+        <p>El ADN está empaquetado en <strong>cromosomas</strong>. Los humanos tenemos <strong>46 cromosomas</strong> (23 pares). Uno de cada par viene de mamá y el otro de papá.</p>
+        <p>Por eso tenemos <strong>dos copias de casi cada gen</strong>. Esto es fundamental para entender la herencia.</p>
+      </div>
+    </div>
+
+    <!-- SECTION 1: ALELOS -->
+    <div class="section" id="sec1">
+      <div class="section-header">
+        <p class="section-tag">Capítulo 2</p>
+        <h2 class="section-title">Alelos,<br><span>dominancia</span> y herencia</h2>
+      </div>
+
+      <div class="card">
+        <p class="card-title">¿Qué es un alelo?</p>
+        <p>Un alelo es una <strong>versión alternativa de un gen</strong>. Como tenés dos copias de cada cromosoma, tenés dos alelos de cada gen — uno materno y uno paterno.</p>
+        <p>Por ejemplo, el gen que determina si producís cierto pigmento puede existir en dos versiones: una que produce pigmento y otra que no.</p>
+      </div>
+
+      <div class="highlight">
+        💡 Cuando los dos alelos que tenés para un gen son iguales, se dice que sos <strong>homocigoto</strong>. Si son distintos, <strong>heterocigoto</strong>.
+      </div>
+
+      <div class="card">
+        <p class="card-title">Dominante vs recesivo</p>
+        <p>Un alelo <strong>dominante</strong> se expresa aunque solo tengas una copia. Se escribe en mayúscula (B).</p>
+        <p>Un alelo <strong>recesivo</strong> solo se expresa si tenés <em>dos copias</em> — una de cada progenitor. Se escribe en minúscula (b).</p>
+        <p style="margin-top:.5rem; font-size:.82rem; color:var(--accent)">¿Por qué? No es magia: si un alelo produce proteína funcional y el otro no, basta una copia funcional para tener el resultado.</p>
+      </div>
+
+      <!-- Visual -->
+      <div class="card">
+        <p class="card-title">Visualizalo</p>
+        <div class="dna-visual">
+          <div class="allele-pair">
+            <div class="allele-circles">
+              <div class="allele-circle dom">B</div>
+              <div class="allele-circle dom">B</div>
+            </div>
+            <div class="allele-label">BB → Marrón</div>
+          </div>
+          <div class="allele-pair">
+            <div class="allele-circles">
+              <div class="allele-circle dom">B</div>
+              <div class="allele-circle rec">b</div>
+            </div>
+            <div class="allele-label">Bb → Marrón</div>
+          </div>
+          <div class="allele-pair">
+            <div class="allele-circles">
+              <div class="allele-circle rec">b</div>
+              <div class="allele-circle rec">b</div>
+            </div>
+            <div class="allele-label">bb → Azul</div>
+          </div>
+        </div>
+        <p style="font-size:.8rem; color:var(--text-muted); text-align:center">Ejemplo simplificado del color de ojos. El azul solo aparece cuando no hay ninguna copia dominante.</p>
+      </div>
+
+      <div class="card">
+        <p class="card-title">Recesivos que "desaparecen"</p>
+        <p>Dos padres de ojos marrones (Bb × Bb) pueden tener un hijo de ojos azules. El alelo azul estaba <strong>oculto</strong> en los heterocigotos — no perdido. La probabilidad en ese cruce es <strong>1 de 4</strong>.</p>
+        <p>Esto es lo que Mendel descubrió con sus plantas de arvejas en 1865.</p>
+      </div>
+
+      <div class="card">
+        <p class="card-title">No todo es dominante/recesivo</p>
+        <p>Hay casos de <strong>codominancia</strong> (ambos se expresan, como el grupo sanguíneo AB) y <strong>dominancia incompleta</strong> (el resultado es intermedio, como flores de color rosa al cruzar rojo y blanco).</p>
+        <p>La realidad es más compleja que "uno domina y el otro no".</p>
+      </div>
+    </div>
+
+    <!-- SECTION 2: MUTACIONES -->
+    <div class="section" id="sec2">
+      <div class="section-header">
+        <p class="section-tag">Capítulo 3</p>
+        <h2 class="section-title">Mutaciones<br>y <span>recombinación</span></h2>
+      </div>
+
+      <div class="card">
+        <p class="card-title">¿Qué es una mutación?</p>
+        <p>Una mutación es un <strong>cambio en la secuencia de ADN</strong>. Puede ser:</p>
+        <p>• Una base cambiada (A→G)<br>
+        • Una base de más (inserción)<br>
+        • Una base de menos (deleción)<br>
+        • Un trozo invertido o duplicado</p>
+      </div>
+
+      <div class="highlight">
+        🎲 La mayoría de las mutaciones son <strong>neutras</strong> — no cambian nada porque ocurren en partes del ADN que no se usan, o no alteran la proteína final. Una pequeña fracción es dañina. Rarísimamente, son beneficiosas.
+      </div>
+
+      <div class="card">
+        <p class="card-title">Fuentes de mutación</p>
+        <p>• <strong>Errores de copia</strong>: cuando la célula divide su ADN, comete ~1 error cada 10.000 millones de bases.</p>
+        <p>• <strong>Radiación ultravioleta</strong>: daña directamente las bases del ADN.</p>
+        <p>• <strong>Químicos mutagénicos</strong>: alteran la estructura del ADN.</p>
+        <p>• <strong>Virus</strong>: pueden insertar su material genético en el nuestro.</p>
+      </div>
+
+      <div class="card">
+        <p class="card-title">Recombinación</p>
+        <p>Cuando se forman óvulos y espermatozoides (meiosis), los cromosomas homólogos se <strong>"cruzan e intercambian pedazos"</strong>. Esto se llama recombinación o crossing-over.</p>
+        <p>El resultado: cada célula reproductiva tiene una combinación única de alelos maternos y paternos. Por eso los hermanos son distintos entre sí aunque tengan los mismos padres.</p>
+      </div>
+
+      <div class="card">
+        <p class="card-title">Ligamiento génico</p>
+        <p>Genes que están <strong>muy cerca en el mismo cromosoma</strong> tienden a heredarse juntos — están "ligados". La recombinación puede separarlos, pero cuanto más cerca estén, menos probable es que eso ocurra.</p>
+        <p>Los genes en cromosomas distintos se heredan de forma completamente independiente (segunda ley de Mendel).</p>
+      </div>
+
+      <div class="highlight">
+        🌀 Mutaciones + recombinación = la fuente de toda la <strong>variación genética</strong> sobre la que actúa la selección natural.
+      </div>
+    </div>
+
+    <!-- SECTION 3: EVOLUCIÓN -->
+    <div class="section" id="sec3">
+      <div class="section-header">
+        <p class="section-tag">Capítulo 4</p>
+        <h2 class="section-title">Evolución<br>y <span>especiación</span></h2>
+      </div>
+
+      <div class="card">
+        <p class="card-title">¿Cómo evoluciona una especie?</p>
+        <p>La evolución ocurre cuando <strong>cambia la frecuencia de alelos</strong> en una población a través del tiempo. Hay cuatro fuerzas que la impulsan:</p>
+        <p>• <strong>Selección natural</strong>: los que sobreviven y se reproducen más pasan sus genes.</p>
+        <p>• <strong>Mutación</strong>: introduce variación nueva.</p>
+        <p>• <strong>Deriva genética</strong>: cambios al azar, especialmente en poblaciones chicas.</p>
+        <p>• <strong>Flujo génico</strong>: migración que trae o lleva alelos.</p>
+      </div>
+
+      <div class="card">
+        <p class="card-title">¿Cuándo aparece una especie nueva?</p>
+        <p>Una nueva especie surge cuando dos poblaciones quedan <strong>aisladas reproductivamente</strong> — dejan de intercambiar genes. Las causas más comunes:</p>
+        <p>• Una <strong>barrera geográfica</strong> (río, cordillera, glaciar) que separa la población.</p>
+        <p>• Diferencias en <strong>época de reproducción</strong>.</p>
+        <p>• Cambios en <strong>comportamiento de cortejo</strong>.</p>
+        <p>• <strong>Incompatibilidad genética</strong> — los híbridos no son fértiles (como la mula).</p>
+      </div>
+
+      <div class="highlight">
+        📌 El criterio más usado es el de <strong>Ernst Mayr</strong>: dos organismos son de la misma especie si pueden reproducirse y tener descendencia <em>fértil</em> en condiciones naturales.
+      </div>
+
+      <div class="card">
+        <p class="card-title">El tiempo que toma</p>
+        <p>La especiación no ocurre de un día para el otro. Generalmente requiere <strong>decenas de miles a millones de años</strong>. Durante ese tiempo, las mutaciones van acumulándose en forma independiente en cada población.</p>
+        <p>Los genetistas pueden medir qué tan diferentes son dos genomas y estimar <strong>cuándo se separaron</strong> — como un "reloj molecular".</p>
+      </div>
+
+      <!-- Timeline -->
+      <div class="card">
+        <p class="card-title">El árbol humano simplificado</p>
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-dot">🐒</div>
+            <div class="tl-content">
+              <div class="tl-time">Hace ~6–7 millones de años</div>
+              <div class="tl-text">Se separa la línea que lleva a los <strong>humanos</strong> de la que lleva a los <strong>chimpancés</strong>. Compartimos ~98.7% del ADN con ellos.</div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot">🚶</div>
+            <div class="tl-content">
+              <div class="tl-time">Hace ~2 millones de años</div>
+              <div class="tl-text">Aparece el género <strong>Homo</strong>. Los humanos ya caminan erguidos y fabrican herramientas.</div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot">🦴</div>
+            <div class="tl-content">
+              <div class="tl-time">Hace ~600.000–800.000 años</div>
+              <div class="tl-text">La línea que lleva a los <strong>Homo sapiens</strong> se separa de la que lleva a los <strong>Neandertales</strong>.</div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot">🧑</div>
+            <div class="tl-content">
+              <div class="tl-time">Hace ~300.000 años</div>
+              <div class="tl-text">Aparecen los primeros <strong>Homo sapiens anatómicamente modernos</strong> en África.</div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot">🌍</div>
+            <div class="tl-content">
+              <div class="tl-time">Hace ~60.000–70.000 años</div>
+              <div class="tl-text"><strong>La gran migración fuera de África.</strong> Los sapiens se expanden hacia Asia, Europa y el resto del mundo.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 4: NEANDERTALES -->
+    <div class="section" id="sec4">
+      <div class="section-header">
+        <p class="section-tag">Capítulo 5</p>
+        <h2 class="section-title">Neandertales<br>y <span>Denisovanos</span></h2>
+      </div>
+
+      <div class="card">
+        <p class="card-title">¿Quiénes eran los Neandertales?</p>
+        <p>Los <strong>Homo neanderthalensis</strong> habitaron Europa y Asia occidental durante cientos de miles de años. Eran robustos, fabricaban herramientas sofisticadas, enterraban a sus muertos y posiblemente tenían alguna forma de lenguaje y arte.</p>
+        <p>Se extinguieron hace unos <strong>40.000 años</strong>, justo cuando los sapiens llegaron en masa a Europa.</p>
+      </div>
+
+      <div class="highlight">
+        🏆 <strong>Svante Pääbo</strong> ganó el <strong>Premio Nobel de Medicina 2022</strong> por secuenciar el genoma neandertal a partir de huesos de 40.000 años, y por descubrir los Denisovanos.
+      </div>
+
+      <div class="card">
+        <p class="card-title">¿Se cruzaron con nosotros?</p>
+        <p>Sí. El análisis de ADN antiguo demostró que cuando los sapiens salieron de África y llegaron a Medio Oriente y Europa, <strong>se aparearon con los neandertales</strong> que ya vivían ahí.</p>
+        <p>Esto no pasó masivamente — fueron encuentros puntuales. Pero fue suficiente para que sus genes entraran en nuestra línea y permanecieran hasta hoy.</p>
+      </div>
+
+      <!-- Barras de ADN neandertal por región -->
+      <div class="card">
+        <p class="card-title">ADN neandertal en humanos actuales</p>
+        <p style="font-size:.8rem; color:var(--text-muted); margin-bottom:1rem">Porcentaje aproximado según el origen geográfico:</p>
+
+        <div class="species-bar">
+          <div class="species-bar-label"><span class="name">Europeos</span><span class="pct">~2%</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:40%"></div></div>
+        </div>
+        <div class="species-bar">
+          <div class="species-bar-label"><span class="name">Asiáticos del Este</span><span class="pct">~2.5%</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:50%"></div></div>
+        </div>
+        <div class="species-bar">
+          <div class="species-bar-label"><span class="name">Melanesios</span><span class="pct">~5% (+ Denisovano)</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:100%"></div></div>
+        </div>
+        <div class="species-bar">
+          <div class="species-bar-label"><span class="name">Africanos sub-saharianos</span><span class="pct">~0%</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:2%"></div></div>
+        </div>
+        <p style="font-size:.75rem; color:var(--text-muted); margin-top:.8rem">Los africanos tienen casi cero porque los cruces ocurrieron <em>fuera</em> de África, en la ruta de migración.</p>
+      </div>
+
+      <div class="card">
+        <p class="card-title">¿Para qué sirve ese ADN neandertal?</p>
+        <p>Algunas variantes neandertales que heredamos parecen haber sido <strong>ventajosas</strong> para los sapiens al colonizar nuevos ambientes:</p>
+        <p>• <strong>Sistema inmune</strong>: resistencia a patógenos europeos desconocidos para los recién llegados.</p>
+        <p>• <strong>Piel y cabello</strong>: adaptaciones al frío y baja radiación UV.</p>
+        <p>• Pero también heredamos algunas variantes asociadas a <strong>mayor riesgo de ciertas enfermedades</strong> modernas.</p>
+      </div>
+
+      <div class="card">
+        <p class="card-title">Los Denisovanos</p>
+        <p>En 2010, Pääbo analizó un fragmento de hueso de una cueva en Siberia y descubrió un <strong>grupo humano completamente desconocido</strong>: los Denisovanos. Solo los conocemos por ADN — no tenemos suficientes fósiles para saber exactamente cómo lucían.</p>
+        <p>Se separaron de los neandertales hace ~400.000 años. Los humanos de Melanesia y algunas poblaciones del sudeste asiático tienen hasta un <strong>5–6% de ADN denisovano</strong>, lo que sugiere otro episodio de cruce fuera de África.</p>
+      </div>
+
+      <div class="highlight">
+        🌐 La historia de la humanidad no fue una línea recta — fue una red. Diferentes linajes humanos se cruzaron en los bordes, dejando huellas en el ADN que seguimos cargando hoy.
+      </div>
+    </div>
+
+    <!-- SECTION 5: QUIZ -->
+    <div class="section" id="sec5">
+      <div class="section-header">
+        <p class="section-tag">Capítulo 6</p>
+        <h2 class="section-title">¿Cuánto<br><span>aprendiste?</span></h2>
+      </div>
+
+      <div class="quiz-card">
+        <p class="quiz-q">1. Si un gen tiene un alelo <strong>dominante (B)</strong> y uno <strong>recesivo (b)</strong>, ¿qué genotipo necesita alguien para mostrar el rasgo recesivo?</p>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this, false, '¡No! BB tiene dos copias dominantes, el rasgo recesivo no se ve.')">BB</button>
+          <button class="quiz-opt" onclick="answer(this, false, 'Bb es heterocigoto — el alelo dominante se expresa y el recesivo queda oculto.')">Bb</button>
+          <button class="quiz-opt" onclick="answer(this, true, '¡Correcto! Con bb no hay ningún alelo dominante que tape al recesivo, así que se expresa.')">bb</button>
+        </div>
+        <p class="quiz-feedback" id="feedback0"></p>
+      </div>
+
+      <div class="quiz-card">
+        <p class="quiz-q">2. ¿Cuál es la función principal de la <strong>recombinación</strong> durante la meiosis?</p>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this, false, 'No exactamente — las mutaciones son cambios en la secuencia del ADN. La recombinación mezcla lo que ya existe.')">Crear mutaciones nuevas</button>
+          <button class="quiz-opt" onclick="answer(this, true, '¡Exacto! La recombinación intercambia segmentos entre cromosomas homólogos, generando nuevas combinaciones de alelos.')">Generar variación mezclando alelos existentes</button>
+          <button class="quiz-opt" onclick="answer(this, false, 'Al contrario — la recombinación puede separar genes que estaban juntos en el mismo cromosoma.')">Mantener juntos los genes ligados</button>
+        </div>
+        <p class="quiz-feedback" id="feedback1"></p>
+      </div>
+
+      <div class="quiz-card">
+        <p class="quiz-q">3. Dos personas de ascendencia <strong>africana sub-sahariana</strong> tienen en promedio ¿cuánto ADN neandertal?</p>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this, false, 'No — las personas de Asia del Este tienen ~2–2.5%.')">~2%</button>
+          <button class="quiz-opt" onclick="answer(this, false, '¡Nada! Los cruces con neandertales ocurrieron fuera de África, en la ruta de migración.')">~4%</button>
+          <button class="quiz-opt" onclick="answer(this, true, '¡Correcto! Casi cero — porque sus ancestros no pasaron por el Medio Oriente ni Europa donde ocurrieron esos cruces.')">Casi 0%</button>
+        </div>
+        <p class="quiz-feedback" id="feedback2"></p>
+      </div>
+
+      <div class="quiz-card">
+        <p class="quiz-q">4. ¿Cuándo dos grupos se consideran <strong>especies distintas</strong> según el criterio biológico de Mayr?</p>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this, false, 'Pueden parecerse mucho y ser especies distintas (como neandertales y sapiens), o parecer muy distintos y ser la misma especie.')">Cuando se ven muy diferentes físicamente</button>
+          <button class="quiz-opt" onclick="answer(this, true, '¡Correcto! El criterio de Mayr dice: misma especie = pueden reproducirse y tener descendencia fértil en condiciones naturales.')">Cuando no pueden reproducirse con descendencia fértil</button>
+          <button class="quiz-opt" onclick="answer(this, false, 'Vivir en zonas distintas puede iniciar la especiación, pero no es lo que define a dos cosas como especies distintas.')">Cuando viven en continentes distintos</button>
+        </div>
+        <p class="quiz-feedback" id="feedback3"></p>
+      </div>
+
+      <div class="quiz-card">
+        <p class="quiz-q">5. ¿Qué científico ganó el Nobel 2022 por secuenciar el genoma neandertal?</p>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this, false, 'Watson y Crick describieron la doble hélice del ADN en 1953, mucho antes.')">Watson y Crick</button>
+          <button class="quiz-opt" onclick="answer(this, false, 'Mendel fue el fundador de la genética clásica, en el siglo XIX.')">Gregor Mendel</button>
+          <button class="quiz-opt" onclick="answer(this, true, '¡Exacto! Svante Pääbo, de Suecia, ganó el Nobel de Medicina 2022 por su trabajo en genómica paleontológica.')">Svante Pääbo</button>
+        </div>
+        <p class="quiz-feedback" id="feedback4"></p>
+      </div>
+
+      <div class="congrats-card" id="congratsCard" style="display:none">
+        <div class="congrats-emoji">🎉</div>
+        <h3>¡Muy bien, Florencia!</h3>
+        <p>Completaste el mini curso de genética y evolución. Ya sabés de genes, alelos, mutaciones, especiación y la conexión con los neandertales.</p>
+        <p style="margin-top:.5rem; color:var(--accent)">La genética no es solo biología — es la historia de quiénes somos.</p>
+      </div>
+
+    </div>
+
+  </main>
+
+  <div class="progress-wrap">
+    <div class="progress-fill" id="progressFill" style="width:0%"></div>
+  </div>
+</div>
+
+<script>
+  let currentSection = 0;
+  const totalSections = 6;
+  let dnaSeq = '';
+  const complement = { A:'T', T:'A', G:'C', C:'G' };
+  const colors = { A:'var(--green)', T:'var(--accent)', G:'var(--accent2)', C:'var(--accent3)' };
+
+  function startApp() {
+    document.getElementById('splash').style.display = 'none';
+    document.getElementById('app').classList.add('visible');
+    updateProgress(0);
+  }
+
+  function goSection(idx, el) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('visible'));
+    document.getElementById('sec' + idx).classList.add('visible');
+    document.querySelectorAll('.nav-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    currentSection = idx;
+    updateProgress(idx);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function updateProgress(idx) {
+    const pct = Math.round(((idx + 1) / totalSections) * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+  }
+
+  // DNA Builder
+  function addNuc(base) {
+    if (dnaSeq.length >= 20) return;
+    dnaSeq += base;
+    renderDNA();
+  }
+
+  function renderDNA() {
+    const display = document.getElementById('dnaDisplay');
+    if (!dnaSeq) {
+      display.innerHTML = '<span style="color:var(--text-muted); font-size:.8rem;">Tocá las bases para construir tu cadena...</span>';
+      document.getElementById('complementRow').innerHTML = '';
+      return;
+    }
+    display.innerHTML = dnaSeq.split('').map(b =>
+      `<span style="color:${colors[b]}">${b}</span>`
+    ).join('·');
+    document.getElementById('complementRow').innerHTML = '';
+  }
+
+  function clearDNA() {
+    dnaSeq = '';
+    renderDNA();
+  }
+
+  function showComplement() {
+    if (!dnaSeq) return;
+    const comp = dnaSeq.split('').map(b => complement[b]).join('');
+    const row = document.getElementById('complementRow');
+    row.innerHTML = '⬇ Complementaria: ' + comp.split('').map((b,i) =>
+      `<span style="color:${colors[b]}">${b}</span>`
+    ).join('·');
+  }
+
+  // Quiz
+  let quizAnswered = [false,false,false,false,false];
+  let quizCorrect = 0;
+
+  function answer(btn, correct, feedback) {
+    const card = btn.closest('.quiz-card');
+    const allOpts = card.querySelectorAll('.quiz-opt');
+    const idx = [...document.querySelectorAll('.quiz-card')].indexOf(card);
+
+    if (quizAnswered[idx]) return;
+    quizAnswered[idx] = true;
+
+    allOpts.forEach(o => o.classList.add('disabled'));
+    btn.classList.add(correct ? 'correct' : 'wrong');
+
+    const fb = document.getElementById('feedback' + idx);
+    fb.textContent = feedback;
+    fb.classList.add('show');
+
+    if (correct) quizCorrect++;
+
+    // Check if all answered
+    if (quizAnswered.every(v => v)) {
+      setTimeout(() => {
+        document.getElementById('congratsCard').style.display = 'block';
+        document.getElementById('congratsCard').scrollIntoView({ behavior: 'smooth' });
+      }, 600);
+    }
+  }
+</script>
+</body>
+</html>
